@@ -3,11 +3,11 @@
 import tkinter as tk
 import time
 
-# ANGLE_MAP = {
-#     "left": 120,
-#     "center": 90,
-#     "right": 60,
-# }
+ANGLE_MAP = {
+    "left": 120,
+    "center": 90,
+    "right": 60,
+}
 
 class Gun:
     """
@@ -42,6 +42,8 @@ class Gun:
         self.image_loader = image_loader
 
         self.speed = 10
+        self.last_shot_time = 0
+        self.fire_delay = 0.25  # seconds
        
 
         # load images once
@@ -156,6 +158,32 @@ class Gun:
     #---------shooting--------------------
     
     def shoot(self):
-        pass
+        """
+        Fire a bullet if the weapon cooldown has expired.
+
+        The method enforces a fire rate using `fire_delay`.
+        If enough time has passed since the last shot,
+        a new Bullet object is created and returned.
+
+        Returns:
+            Bullet | None:
+                A new Bullet instance when firing is allowed,
+                otherwise None if the gun is still on cooldown.
+
+        Side Effects:
+            - Updates `last_shot_time`.
+            - Creates a new Bullet object.
+        """
+        current_time = time.time()
+
+        if current_time - self.last_shot_time >= self.fire_delay:
+            x, y = self.get_center()
+            self.last_shot_time = current_time
+            angle = ANGLE_MAP[self.direction]
+            from game.bullet import Bullet
+            return Bullet(self.canvas, x, y - 20,angle=angle)
+
+        return None
+    
        
     

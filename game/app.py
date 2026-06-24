@@ -5,6 +5,7 @@ import config
 from PIL import Image, ImageTk
 from utils.image_loader import ImageLoader
 from game.target import Target
+from game.bullet import Bullet
 from game.score import Score
 from game.game_state import GameState
 from game.gun import Gun
@@ -64,6 +65,7 @@ class GameApp:
         self.root.bind("<KeyPress>", self.on_key_down)
         self.root.bind("<KeyRelease>", self.on_key_up)
         self.targets = []
+        self.bullets = []
         # for _ in range(5):
         #     self.spawn_target()
             
@@ -154,6 +156,26 @@ class GameApp:
             self.gun.aim_center()
             
     
+    def shoot(self):
+        """
+    Fire a bullet from the player's gun.
+
+    A shooting sound effect is played regardless of whether a bullet
+    is created. If the gun's fire-rate cooldown has expired, a new
+    Bullet object is created and added to the active bullet list.
+
+    Side Effects:
+        - Plays the gun-shot sound effect.
+        - May create and store a new Bullet instance.
+        - Updates the gun's internal firing cooldown.
+    """
+        bullet = self.gun.shoot()
+        play_sound("assets/sounds/gun_shot.mp3")
+        if bullet is not None:
+            self.bullets.append(bullet)
+        # bullet = self.gun.shoot()
+        # self.bullets.append(bullet)
+    
     def game_loop(self):
         """
         Executes the main game loop
@@ -163,6 +185,19 @@ class GameApp:
         """
         
         # move bullets 
+        # shooting
+        if "space" in self.keys:
+            self.shoot()
+            self.keys.discard("space")
+
+        # bullets
+        for bullet in self.bullets:
+            if self.slow_motion:
+                bullet.speed = 4
+            else:
+                bullet.speed = 12
+            bullet.update()
+        self.bullets = [b for b in self.bullets if b.active]
         
         # gun movement
         if "Left" in self.keys:
