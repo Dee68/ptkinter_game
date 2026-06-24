@@ -12,6 +12,7 @@ from game.game_state import GameState
 from game.gun import Gun
 from utils.audio import play_sound, mute_sound
 from utils.collision import check_collision
+from game.particle import Particle
 import time
 
 class GameApp:
@@ -72,8 +73,6 @@ class GameApp:
         self.root.bind("<KeyRelease>", self.on_key_up)
         self.targets = []
         self.bullets = []
-        # for _ in range(5):
-        #     self.spawn_target()
             
         self.slow_motion = False
         self.slow_motion_end = 0
@@ -327,7 +326,7 @@ class GameApp:
                         "Don't let targets reach the bottom.\n"
                         "You have 5 lives."
                     ),
-                    font=("Arial", 14),
+                    font=("Arial", 16,"bold"),
                     fill="green",
                     justify="center"
                 )
@@ -400,29 +399,29 @@ class GameApp:
       
     def update_game(self):
         """
-    Update all gameplay systems for a single frame.
+        Update all gameplay systems for a single frame.
 
-    This method is executed repeatedly by the main game loop
-    while the game is in the PLAYING state.
+        This method is executed repeatedly by the main game loop
+        while the game is in the PLAYING state.
 
-    Responsibilities include:
-        - Processing player input.
-        - Updating gun movement.
-        - Handling shooting actions.
-        - Updating bullets and targets.
-        - Managing slow-motion effects.
-        - Detecting target escapes.
-        - Performing collision detection.
-        - Updating score and level progression.
-        - Spawning new targets when required.
+        Responsibilities include:
+            - Processing player input.
+            - Updating gun movement.
+            - Handling shooting actions.
+            - Updating bullets and targets.
+            - Managing slow-motion effects.
+            - Detecting target escapes.
+            - Performing collision detection.
+            - Updating score and level progression.
+            - Spawning new targets when required.
 
-    Side Effects:
-        - Modifies positions of game objects.
-        - Creates and removes bullets and targets.
-        - Updates score, lives, and level state.
-        - May trigger game-over conditions.
-        - May increase game difficulty.
-    """
+        Side Effects:
+            - Modifies positions of game objects.
+            - Creates and removes bullets and targets.
+            - Updates score, lives, and level state.
+            - May trigger game-over conditions.
+            - May increase game difficulty.
+        """
     
     
         if self.state != GameState.PLAYING:
@@ -475,10 +474,9 @@ class GameApp:
                     bullet.destroy()
                     target.reset()
                     
-                    # for _ in range(12):
-                    #     self.particles.append(Particle(self.canvas, cx, cy))
+                    for _ in range(12):
+                        self.particles.append(Particle(self.canvas, cx, cy))
 
-                    #self.spawn_flash(cx, cy)#center
                     
                     self.score.add(1)
                     # add sound effect for score = 10
@@ -488,28 +486,28 @@ class GameApp:
                    
                     
         
-        #self.particles = [p for p in self.particles if p.update()]
+        self.particles = [p for p in self.particles if p.update()]
                     
         self.maybe_spawn_target()  
         
     
     def show_game_over(self):
         """
-    Display the game-over screen.
+        Display the game-over screen.
 
-    Clears the current game view and displays a game-over message
-    along with restart instructions. All active targets and bullets
-    are removed, and a short delay is applied before restarting
-    becomes available.
+        Clears the current game view and displays a game-over message
+        along with restart instructions. All active targets and bullets
+        are removed, and a short delay is applied before restarting
+        becomes available.
 
-    Side Effects:
-        - Clears all canvas items.
-        - Rebuilds the score display.
-        - Displays game-over UI elements.
-        - Removes all active targets and bullets.
-        - Temporarily disables restarting.
-        - Schedules restart availability after a delay.
-    """
+        Side Effects:
+            - Clears all canvas items.
+            - Rebuilds the score display.
+            - Displays game-over UI elements.
+            - Removes all active targets and bullets.
+            - Temporarily disables restarting.
+            - Schedules restart availability after a delay.
+        """
         self.sound_enabled = False
         mute_sound()
         self.canvas.delete("all")
