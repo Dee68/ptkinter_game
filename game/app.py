@@ -124,20 +124,20 @@ class GameApp:
      
     def on_key_down(self, event):
         """
-    Handle keyboard key-press events.
+        Handle keyboard key-press events.
 
-    Pressed keys are tracked in the active key set for use
-    by the game loop. When the game is over, pressing 'R'
-    restarts the game.
+        Pressed keys are tracked in the active key set for use
+        by the game loop. When the game is over, pressing 'R'
+        restarts the game.
 
-    Args:
-        event (tk.Event):
-            Tkinter keyboard event object.
+        Args:
+            event (tk.Event):
+                Tkinter keyboard event object.
 
-    Side Effects:
-        - Adds the pressed key to the active key set.
-        - May restart the game.
-    """
+        Side Effects:
+            - Adds the pressed key to the active key set.
+            - May restart the game.
+        """
         self.keys.add(event.keysym)
         
         if self.state == GameState.GAME_OVER and event.keysym.lower() == "r":
@@ -150,18 +150,18 @@ class GameApp:
     def on_key_up(self, event):
         
         """
-    Handle keyboard key-release events.
+        Handle keyboard key-release events.
 
-    Removes released keys from the active key set to stop
-    continuous actions such as movement.
+        Removes released keys from the active key set to stop
+        continuous actions such as movement.
 
-    Args:
-        event (tk.Event):
-            Tkinter keyboard event object.
+        Args:
+            event (tk.Event):
+                Tkinter keyboard event object.
 
-    Side Effects:
-        - Removes the released key from the active key set.
-    """
+        Side Effects:
+            - Removes the released key from the active key set.
+        """
         self.keys.discard(event.keysym)
         if event.keysym in ("Left", "Right"):
             self.gun.aim_center()
