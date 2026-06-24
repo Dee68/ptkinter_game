@@ -139,6 +139,12 @@ class GameApp:
         - May restart the game.
     """
         self.keys.add(event.keysym)
+        
+        if self.state == GameState.GAME_OVER and event.keysym.lower() == "r":
+            self.start_game()
+        elif event.keysym == "Escape":
+            self.root.destroy()
+
 
 
     def on_key_up(self, event):
