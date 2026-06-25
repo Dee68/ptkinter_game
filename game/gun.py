@@ -2,11 +2,12 @@
 
 import tkinter as tk
 import time
+from game.direction import Direction
 
 ANGLE_MAP = {
-    "left": 120,
-    "center": 90,
-    "right": 60,
+    Direction.LEFT: 120,
+    Direction.CENTER: 90,
+    Direction.RIGHT: 60,
 }
 
 class Gun:
@@ -48,14 +49,14 @@ class Gun:
 
         # load images once
         self.images = {
-            "left": self.image_loader.load("gun_left.png"),
-            "center": self.image_loader.load("gun_center.png"),
-            "right": self.image_loader.load("gun_right.png"),
+            Direction.LEFT: self.image_loader.load("gun_left.png"),
+            Direction.CENTER: self.image_loader.load("gun_center.png"),
+            Direction.RIGHT: self.image_loader.load("gun_right.png"),
         }
         self.width = 64
         self.height = 64
 
-        self.direction = "center"
+        self.direction = Direction.CENTER
         self.current_image = self.images[self.direction]
 
         self.id = self.canvas.create_image(
@@ -79,7 +80,7 @@ class Gun:
 
         if x - self.width / 2 > 0:
             self.canvas.move(self.id, -self.speed, 0)
-            self.set_direction("left")
+            self.set_direction(Direction.LEFT)
    
     def move_right(self):
         """
@@ -95,7 +96,7 @@ class Gun:
 
         if x + self.width / 2 < canvas_width:
             self.canvas.move(self.id, self.speed, 0)
-            self.set_direction("right")
+            self.set_direction(Direction.RIGHT)
 
     def aim_center(self):
         """
@@ -107,10 +108,10 @@ class Gun:
         Side Effects:
             Updates the displayed gun image.
         """
-        self.set_direction("center")
+        self.set_direction(Direction.CENTER)
 
     # ---------------- direction handling ----------------
-    def set_direction(self, direction: str):
+    def set_direction(self, direction: Direction):
         """
         Change the gun's facing direction and sprite.
 

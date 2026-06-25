@@ -46,13 +46,16 @@ class GameApp:
         self.score = Score(self.canvas)
         self.loader = ImageLoader()
         self.target_speed = config.TARGET_SPEED
-        self.spawn_delay = 1200
+        self.spawn_delay = 1200 # ms
         self.last_spawn_time = 0
-        self.max_targets = 5
-        self.lives = 3
+        self.max_targets = config.MAX_TARGETS
+        self.lives = config.STARTING_LIVES
         self.level = 1
+        # set up an empty set of keys
         self.keys = set()
+        # set default state of game
         self.state = GameState.MENU
+        # display the level text
         self.level_text = self.canvas.create_text(
             200,
             20,
@@ -61,6 +64,7 @@ class GameApp:
             fill="blue",
             tags="level_up"
         )
+        # display the lives text
         self.lives_text = self.canvas.create_text(
             340,
             20,
@@ -68,14 +72,19 @@ class GameApp:
             font=("Arial", 14),
             fill="white"
         )
+        # create the gun object and display it on the canvas
         self.gun = Gun(self.canvas, self.loader,350,550)
+        # bind key actions to methods
         self.root.bind("<KeyPress>", self.on_key_down)
         self.root.bind("<KeyRelease>", self.on_key_up)
+        # declare empty list for targets
         self.targets = []
+        # declare empty list for bullets
         self.bullets = []
             
         self.slow_motion = False
         self.slow_motion_end = 0
+        # call the brain(manager) of the app
         self.game_loop()
         
     def setup_window(self):
@@ -107,8 +116,6 @@ class GameApp:
     def spawn_target(self):
         x = random.randint(0, config.WIDTH - 40)
         y = random.randint(-300, -50)
-
-        # enable speed to be dependent on level ?
         speed = self.target_speed 
         
         target = Target(
@@ -169,39 +176,38 @@ class GameApp:
     
     def shoot(self):
         """
-    Fire a bullet from the player's gun.
+        Fire a bullet from the player's gun.
 
-    A shooting sound effect is played regardless of whether a bullet
-    is created. If the gun's fire-rate cooldown has expired, a new
-    Bullet object is created and added to the active bullet list.
+        A shooting sound effect is played regardless of whether a bullet
+        is created. If the gun's fire-rate cooldown has expired, a new
+        Bullet object is created and added to the active bullet list.
 
-    Side Effects:
-        - Plays the gun-shot sound effect.
-        - May create and store a new Bullet instance.
-        - Updates the gun's internal firing cooldown.
-    """
+        Side Effects:
+            - Plays the gun-shot sound effect.
+            - May create and store a new Bullet instance.
+            - Updates the gun's internal firing cooldown.
+        """
         bullet = self.gun.shoot()
         play_sound("assets/sounds/gun_shot.mp3")
         if bullet is not None:
             self.bullets.append(bullet)
-        # bullet = self.gun.shoot()
-        # self.bullets.append(bullet)
+        
     
     
     
     def maybe_spawn_target(self):
         """
-    Spawn a target when spawning conditions are met.
+        Spawn a target when spawning conditions are met.
 
-    A new target is created only when:
-        - The game is in the PLAYING state.
-        - The maximum target limit has not been reached.
-        - The configured spawn delay has elapsed.
+        A new target is created only when:
+            - The game is in the PLAYING state.
+            - The maximum target limit has not been reached.
+            - The configured spawn delay has elapsed.
 
-    Side Effects:
-        - May create a new Target object.
-        - Updates the last target spawn timestamp.
-    """
+        Side Effects:
+            - May create a new Target object.
+            - Updates the last target spawn timestamp.
+        """
         if self.state != GameState.PLAYING:
             return
         now = time.time() * 1000
@@ -216,23 +222,23 @@ class GameApp:
     
     def handle_escape(self, target):
         """
-    Handle a target reaching the bottom of the screen.
+        Handle a target reaching the bottom of the screen.
 
-    The player loses one life when a target escapes. If no lives
-    remain, the game transitions to the GAME_OVER state. Otherwise,
-    the escaped target is reset and returned to play.
+        The player loses one life when a target escapes. If no lives
+        remain, the game transitions to the GAME_OVER state. Otherwise,
+        the escaped target is reset and returned to play.
 
-    Args:
-        target (Target):
-            The target that escaped the play area.
+        Args:
+            target (Target):
+                The target that escaped the play area.
 
-    Side Effects:
-        - Decrements the player's lives.
-        - Updates the lives display.
-        - Shows a life-loss warning message.
-        - May change the game state to GAME_OVER.
-        - May reset the target's position.
-    """
+        Side Effects:
+            - Decrements the player's lives.
+            - Updates the lives display.
+            - Shows a life-loss warning message.
+            - May change the game state to GAME_OVER.
+            - May reset the target's position.
+        """
         self.lives -= 1
         self.update_lives_ui()
         self.show_life_warning()
@@ -247,14 +253,14 @@ class GameApp:
       
     def update_lives_ui(self):
         """
-    Update the lives display on the canvas.
+        Update the lives display on the canvas.
 
-    Synchronizes the lives text element with the current
-    value of the player's remaining lives.
+        Synchronizes the lives text element with the current
+        value of the player's remaining lives.
 
-    Side Effects:
-        - Updates the lives text displayed on the canvas.
-    """
+        Side Effects:
+            - Updates the lives text displayed on the canvas.
+        """
         self.canvas.itemconfig(
             self.lives_text,
             text=f"Lives: {self.lives}"
@@ -319,23 +325,55 @@ class GameApp:
                 )
                 
                 # Instructions
-                self.canvas.create_text(
-                    config.WIDTH // 2,
-                    340,
-                    text=(
-                        "HOW TO PLAY\n\n"
-                        "← Move Left\n"
-                        "→ Move Right\n"
-                        "SPACE = Shoot\n\n"
-                        "Hit targets to earn points.\n"
-                        "Every 5 points advances a level.\n"
-                        "Don't let targets reach the bottom.\n"
-                        "You have 5 lives."
-                    ),
-                    font=("Arial", 16,"bold"),
-                    fill="green",
-                    justify="center"
-                )
+                # self.canvas.create_text(
+                #     config.WIDTH // 2,
+                #     360,
+                #     text="""
+                # ====================================
+                #         HOW TO PLAY
+                # ====================================
+
+                # ← Move Left
+                # → Move Right
+                # SPACE = Shoot
+
+                # Hit targets to earn points.
+                # Every 5 points advances a level.
+                # Don't let targets reach the bottom.
+                # You have 5 lives.
+                # ====================================
+                # """,
+                #     font=("Courier New", 14),
+                #     fill="green",
+                #     justify="center"
+                # )
+                
+            self.canvas.create_rectangle(
+                150,
+                250,
+                550,
+                470,
+                fill="white",
+                outline="darkgreen",
+                width=3
+            )
+            self.canvas.create_text(
+                config.WIDTH // 2,
+                360,
+                text=(
+                    "HOW TO PLAY\n\n"
+                    "← Move Left\n"
+                    "→ Move Right\n"
+                    "SPACE = Shoot\n\n"
+                    "Hit targets to earn points.\n"
+                    "Every 5 points advances a level.\n"
+                    "Don't let targets reach the bottom.\n"
+                    "You have 5 lives."
+                ),
+                font=("Arial", 14),
+                fill="darkgreen",
+                justify="center"
+            )
             # space key starts game a fresh
             if "space" in self.keys:
                 self.canvas.delete("all")
@@ -434,7 +472,7 @@ class GameApp:
             self.sound_enabled = False
             mute_sound()
             return
-        # slow motion handling
+        # slow motion handling, keeps it inactive unless level changes
         if self.slow_motion and time.time() > self.slow_motion_end:
             self.slow_motion = False
         # movement
@@ -533,9 +571,18 @@ class GameApp:
             font=("Arial", 20, "bold"),
             fill="blue"
         )
+        
         self.canvas.create_text(
             config.WIDTH // 2,
-            config.HEIGHT // 2 + 40,
+            config.HEIGHT // 2+40,
+            text=f"Highest Level: {self.level}",
+            font=("Arial",20,"bold"),
+            fill="blue"
+        )
+        
+        self.canvas.create_text(
+            config.WIDTH // 2,
+            config.HEIGHT // 2 + 70,
             text="Press R to restart",
             font=("Arial", 16),
             fill="Black"
@@ -543,9 +590,9 @@ class GameApp:
         
         self.canvas.create_text(
             config.WIDTH // 2,
-            config.HEIGHT // 2 + 70,
+            config.HEIGHT // 2 + 100,
             text="Press ESC to quit",
-            font=("Arial", 16),
+            font=("Arial", 16,"bold"),
             fill="Black"
         )
         self.targets.clear()
@@ -608,7 +655,7 @@ class GameApp:
         """
     
         #new_level = (self.score // 5) + 1
-        new_level = (self.score.value // 5) + 1
+        new_level = (self.score.value // config.LEVEL_SCORE) + 1
         # to debug the level variable
         #print(f"Score={self.score}, New Level={new_level}")
         if new_level > self.level:
@@ -659,4 +706,4 @@ class GameApp:
             self.update_game_over()
         # Schedule the next frame.
        
-        self.root.after(30, self.game_loop)
+        self.root.after(config.FRAME_TIME, self.game_loop)
