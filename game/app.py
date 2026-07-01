@@ -46,11 +46,11 @@ class GameApp:
         self.score = Score(self.canvas)
         self.loader = ImageLoader()
         self.target_speed = config.TARGET_SPEED
-        self.spawn_delay = 1200 # ms
+        self.spawn_delay = 1200 # milliseconds
         self.last_spawn_time = 0
         self.max_targets = config.MAX_TARGETS
         self.lives = config.STARTING_LIVES
-        self.level = 1
+        self.level = config.START_LEVEL
         # set up an empty set of keys
         self.keys = set()
         # set default state of game
@@ -72,8 +72,6 @@ class GameApp:
             font=("Arial", 14),
             fill="white"
         )
-        # create the gun object and display it on the canvas
-        self.gun = Gun(self.canvas, self.loader,350,550)
         # bind key actions to methods
         self.root.bind("<KeyPress>", self.on_key_down)
         self.root.bind("<KeyRelease>", self.on_key_up)
@@ -81,7 +79,7 @@ class GameApp:
         self.targets = []
         # declare empty list for bullets
         self.bullets = []
-            
+        self.particles = []  
         self.slow_motion = False
         self.slow_motion_end = 0
         # call the brain(manager) of the app
@@ -312,7 +310,7 @@ class GameApp:
                     120,
                     text="SHOOTING GAME",
                     font=("Arial", 28, "bold"),
-                    fill="darkblue"
+                    fill="darkgreen"
                 )
                 # start message
                 self.menu_text = self.canvas.create_text(
@@ -321,33 +319,10 @@ class GameApp:
                     200,
                     text="PRESS SPACE TO START",
                     font=("Arial", 24),
-                    fill="Black"
+                    fill="darkgreen"
                 )
                 
-                # Instructions
-                # self.canvas.create_text(
-                #     config.WIDTH // 2,
-                #     360,
-                #     text="""
-                # ====================================
-                #         HOW TO PLAY
-                # ====================================
-
-                # ← Move Left
-                # → Move Right
-                # SPACE = Shoot
-
-                # Hit targets to earn points.
-                # Every 5 points advances a level.
-                # Don't let targets reach the bottom.
-                # You have 5 lives.
-                # ====================================
-                # """,
-                #     font=("Courier New", 14),
-                #     fill="green",
-                #     justify="center"
-                # )
-                
+               
             self.canvas.create_rectangle(
                 150,
                 250,
@@ -399,26 +374,19 @@ class GameApp:
         """
         
         self.state = GameState.PLAYING
+        self.lives = 5
+        self.level = 1
         if self.sound_enabled:
             play_sound("assets/sounds/start_game.mp3")
         else:
            mute_sound() 
-        #self.score = 0
+       
         self.score.reset()
-        self.level = 1
-        self.lives = 5
-
-        self.canvas.delete("all")
-        #self.canvas.delete("targets")
-        #self.canvas.delete("bullets")
-        self.create_background()
-        self.score.rebuild()
-
-        self.targets = []
-        self.bullets = []
-        self.particles = []
-
         
+        self.canvas.delete("all")
+       
+        self.create_background()
+        self.score.rebuild()    
         self.level_text = self.canvas.create_text(
             200, 20,
             text=f"Level: {self.level}",

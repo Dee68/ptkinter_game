@@ -1,6 +1,8 @@
 # the target can be any object of shape, it's properties and method s goes here
 import tkinter as tk 
 import random
+import math
+from PIL import Image
 
 plane_images = ["hell.png", "hell1.png", "hell2.png"]
 
@@ -24,7 +26,35 @@ class Target:
 
         self.width = 30
         self.height = 30
-        self.image = self.image_loader.load(random.choice(plane_images))
+        self.rotor_angle = 0
+        self.body_angle = 0 #
+        #self.image = self.image_loader.load(random.choice(plane_images))
+        # self.body_image = self.image_loader.load_pil(
+        #     "hell_body.png"
+        # )
+
+        # self.rotor_image = self.image_loader.load_pil(
+        #     "rotor2.png"
+        # )
+        
+        self.body_images = [
+            self.image_loader.load_pil("hell_body_0.png"),
+            self.image_loader.load_pil("hell_body_1.png"),
+            self.image_loader.load_pil("hell_body_2.png"),
+        ]
+
+        self.rotor_images = [
+            self.image_loader.load_pil("rotor_0.png"),
+            self.image_loader.load_pil("rotor_1.png"),
+            self.image_loader.load_pil("rotor_2.png"),
+        ]
+        
+        self.body_image = random.choice(self.body_images)
+        self.rotor_image = random.choice(self.rotor_images)
+        self.tk_image = self.build_image()
+        
+        self.tilt_phase = random.random() * math.pi * 2 # controls oscillation over time
+        
         # self.id = self.canvas.create_oval(
         #     x,
         #     y,
@@ -37,9 +67,54 @@ class Target:
         self.id = self.canvas.create_image(
             x,
             y,
-            image=self.image,
+            #image=self.image,
+            image=self.tk_image,
             anchor="center"
         )
+        
+    # helper method
+    def build_image(self):
+
+        #helicopter = self.body_image.copy() # copy original image
+        # rotates body of helicopter
+        helicopter = self.body_image.rotate(
+            self.body_angle,
+            expand=True
+        )
+        # rotates the rotor/blade
+        rotated_rotor = self.rotor_image.rotate(
+            self.rotor_angle,
+            expand=True
+        )
+        # generate a dynamic scaling factor to oscillate between -1 and 1
+        scale = abs(math.cos(math.radians(self.rotor_angle))) # abs enables the value bwt 0 and 1
+        scale = max(0.2, scale) # ensures that the min value can not be < 0.2(20%)
+        # Adjust rotor height based on the scale value
+        new_height = int(rotated_rotor.height * scale) # width remains unchanged causing animation effect like squash/stretch
+        # resize rotor image and reduce aliasing artifacts/ quality downsampling filter
+        rotated_rotor = rotated_rotor.resize(
+            (
+                rotated_rotor.width,
+                new_height
+            ),
+            Image.Resampling.LANCZOS
+        )
+        # Paste rotor approximately over the mast.
+        # helicopter.paste(
+        #     rotated_rotor,
+        #     (10, 0),
+        #     rotated_rotor
+        # )
+        rotor_x = (helicopter.width - rotated_rotor.width) // 2
+        rotor_y = 0
+
+        helicopter.paste(
+            rotated_rotor,
+            (rotor_x, rotor_y),
+            rotated_rotor
+        )
+
+        return self.image_loader.from_pil(helicopter)
         
     #-----movement -----------
     def update(self, slow_motion=False):
@@ -80,8 +155,14 @@ class Target:
             return "dead"   # safety guard
 
         speed = self.speed * (0.4 if slow_motion else 1)
+      
+        self.rotor_angle = (self.rotor_angle + 25) % 360
+        self.tilt_phase += 0.05
+        self.body_angle = 8 * math.sin(self.tilt_phase)
+        self.tk_image = self.build_image()
+        self.canvas.itemconfig(self.id, image=self.tk_image)
         self.canvas.move(self.id, 0, speed)
-
+        
         x1, y1, x2, y2 = self.get_bbox()
 
         if y2 >= self.canvas.winfo_height():
