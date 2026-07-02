@@ -5,6 +5,7 @@ Technologies:
 - Tkinter
 - Pillow
 - Pygame Mixer
+- OpenCV
 
 Features:
 - OOP Design
