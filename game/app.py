@@ -10,10 +10,20 @@ from game.bullet import Bullet
 from game.score import Score
 from game.game_state import GameState
 from game.gun import Gun
-from utils.audio import play_sound, mute_sound
+from utils.audio import play_sound, play_music, stop_music, mute_sound
 from utils.collision import check_collision
 from game.particle import Particle
+from pathlib import Path
 import time
+import cv2
+
+
+video_path = (
+    Path(__file__).resolve().parent.parent
+    / "assets"
+    / "videos"
+    / "intro.mp4"
+)
 
 class GameApp:
     """
@@ -41,6 +51,20 @@ class GameApp:
         self.root = root
         self.setup_window()
         self.create_canvas()
+        # get the intro video
+        self.video = cv2.VideoCapture(
+           str(video_path)
+        )
+        # play intro music with video
+        play_sound("assets/sounds/intro_music.mp3")
+        self.video_item = self.canvas.create_image(
+            0,
+            0,
+            anchor="nw"
+        )
+        # set up an empty frame
+        self.current_frame = None
+        #self.play_intro_video()
         self.create_background()
         self.sound_enabled = True
         self.score = Score(self.canvas)
@@ -51,10 +75,14 @@ class GameApp:
         self.max_targets = config.MAX_TARGETS
         self.lives = config.STARTING_LIVES
         self.level = config.START_LEVEL
+       
+        #print(self.video.isOpened())
+        # 
+        
         # set up an empty set of keys
         self.keys = set()
         # set default state of game
-        self.state = GameState.MENU
+        self.state = GameState.INTRO
         # display the level text
         self.level_text = self.canvas.create_text(
             200,
@@ -82,6 +110,7 @@ class GameApp:
         self.particles = []  
         self.slow_motion = False
         self.slow_motion_end = 0
+       
         # call the brain(manager) of the app
         self.game_loop()
         
@@ -355,7 +384,34 @@ class GameApp:
                 self.start_game()
                 self.keys.discard("space")
       
-      
+    # helper method to play video
+    def update_intro(self):
+
+        ret, frame = self.video.read()
+
+        if not ret:
+            self.video.release()
+            self.canvas.delete(self.video_item)
+
+            self.create_background()
+
+            self.state = GameState.MENU
+            return
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        image = Image.fromarray(frame)
+
+        photo = ImageTk.PhotoImage(image)
+
+        self.canvas.itemconfig(
+            self.video_item,
+            image=photo
+        )
+
+        self.current_frame = photo
+        
+    
     def start_game(self):
         """
         Start a new game session.
@@ -372,14 +428,19 @@ class GameApp:
             - Removes existing bullets and targets.
             - Spawns the initial wave of targets.
         """
+        self.video.release()
+        stop_music()
+        
+        self.canvas.delete(self.video_item)
         
         self.state = GameState.PLAYING
         self.lives = 5
         self.level = 1
-        if self.sound_enabled:
-            play_sound("assets/sounds/start_game.mp3")
-        else:
-           mute_sound() 
+        #stop_music()
+        #if self.sound_enabled:
+        play_music("assets/sounds/start_game.mp3")
+        #else:
+           #stop_music() 
        
         self.score.reset()
         
@@ -440,6 +501,7 @@ class GameApp:
             self.sound_enabled = False
             mute_sound()
             return
+        #play_sound("assets/sounds/start_game.mp3")
         # slow motion handling, keeps it inactive unless level changes
         if self.slow_motion and time.time() > self.slow_motion_end:
             self.slow_motion = False
@@ -521,7 +583,8 @@ class GameApp:
             - Schedules restart availability after a delay.
         """
         self.sound_enabled = False
-        mute_sound()
+        stop_music()
+        #mute_sound()
         self.canvas.delete("all")
         self.score.rebuild()
         self.canvas.create_text(
@@ -662,8 +725,9 @@ class GameApp:
         the `config.FRAME_TIME`
         This is the central update scheduler of the game and handle state
         """
-        
-        if self.state == GameState.MENU:
+        if self.state == GameState.INTRO:
+            self.update_intro()
+        elif self.state == GameState.MENU:
             self.update_menu()
 
         elif self.state == GameState.PLAYING:
